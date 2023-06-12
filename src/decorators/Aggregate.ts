@@ -1,6 +1,6 @@
-import { AnyAggregateConstructor, AnyAggregate } from '../Aggregate'
+import { AnyAggregateConstructor } from '../Aggregate'
 import { getEventHandler } from './When'
-import BaseEvent, { AnyEvent } from '../Event'
+import { AnyEvent, EventConstructor } from '../Event'
 
 const aggregates = new Map<string, AnyAggregateConstructor>()
 
@@ -14,7 +14,42 @@ export interface AggregateMixin {
   version: number,
 }
 
-export default function Aggregate(name: string) {
+type MissingHandlerDeciderFn = (event: AnyEvent) => boolean
+type MissingHandlerDeciderTypes = EventConstructor<AnyEvent>[]|RegExp|MissingHandlerDeciderFn|boolean
+
+export interface AggregateOptions {
+  ignoreMissingHandlers?: MissingHandlerDeciderTypes,
+}
+
+const isRegExp = (o: any): o is RegExp => typeof o === 'object' && typeof o.test === 'function'
+
+const createIgnoreMissingDecider = (options: AggregateOptions): MissingHandlerDeciderFn => {
+  let ignoreMissingHandler: (event: AnyEvent) => boolean
+  const decider = options?.ignoreMissingHandlers ?? false
+
+  if (typeof decider === 'function') {
+    ignoreMissingHandler = decider
+  } else if (Array.isArray(decider)) {
+    const types = decider.map((eventConstructor) => eventConstructor.TYPE)
+    ignoreMissingHandler = (event: AnyEvent) => types.includes(event.type)
+  } else if (isRegExp(decider)) {
+    ignoreMissingHandler = (event) => {
+      return decider.test(event.type)
+    }
+  }else {
+    ignoreMissingHandler = () => Boolean(options.ignoreMissingHandlers)
+  }
+
+  return ignoreMissingHandler
+}
+
+export default function Aggregate(name: string, options: AggregateOptions = {}) {
+  if (aggregates.has(name)) {
+    throw new Error(`Aggregate class for ${name} already defined.`)
+  }
+
+  let shouldIgnoreMissingHandler = createIgnoreMissingDecider(options)
+
   return <T extends AnyAggregateConstructor>(Constructor: T) => {
     class DecoratedAggregateClass extends Constructor implements AggregateMixin {
       public version: number = 0
@@ -45,6 +80,10 @@ export default function Aggregate(name: string) {
       #applyEvent(event: AnyEvent) {
         const handler = getEventHandler(Constructor, event.type)
         if (!handler) {
+          if (!shouldIgnoreMissingHandler(event)) {
+            throw new Error(`Missing handler for ${event.type} in ${this.type} aggregate.`)
+          }
+
           return
         }
 
