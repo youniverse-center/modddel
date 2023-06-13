@@ -1,12 +1,16 @@
 import { v4 as uuid } from 'uuid'
-import BaseAggregate, { AnyAggregate, AggregateId } from './Aggregate'
+import type { AnyAggregate, AggregateId, AnyAggregateConstructor } from './Aggregate'
+
+const isAggregateConstructor = (possibleConstructor: any): possibleConstructor is AnyAggregateConstructor => (
+  typeof possibleConstructor === 'function' && Boolean(possibleConstructor.TYPE)
+)
 
 export default class Event<A extends AnyAggregate, P> {
   #aggregateType?: string
   #aggregateId?: AggregateId<A>
+  #version: number = 0
 
   public id: string
-  public version: number = 0
   public occuredAt: number
   public meta: any = {}
 
@@ -18,21 +22,23 @@ export default class Event<A extends AnyAggregate, P> {
     return Event.TYPE
   }
 
-  public withSubject(aggregate: A, version?: number) {
+  public withSubject(aggregate: A) {
     this.#aggregateId = aggregate.aggregateId
     this.#aggregateType = aggregate.type
-    if (version) {
-      this.version = version
-    }
+    this.#version = aggregate.version
   }
 
   constructor(
     public readonly payload: P,
-    aggregateType?: string,
-    aggregateId?: AggregateId<A>
+    aggregateType?: string|AnyAggregateConstructor,
+    aggregateId?: AggregateId<A>,
+    version: number = 0
   ) {
     this.id = uuid()
     this.occuredAt = Date.now()
+    this.#aggregateId = aggregateId
+    this.#aggregateType = isAggregateConstructor(aggregateType) ? aggregateType.TYPE : aggregateType
+    this.#version = version
   }
 
   get aggregateId(): AggregateId<A> {
@@ -50,11 +56,15 @@ export default class Event<A extends AnyAggregate, P> {
 
     return this.#aggregateType
   }
+
+  get version(): number {
+    return this.#version
+  }
 }
 
 export type EventPayload<E> = E extends Event<AnyAggregate, infer T> ? T : never
-export type EventAggregate<E> = E extends Event<infer A, any>  ? A : never
-export type AnyEvent = Event<AnyAggregate, unknown>
+export type EventAggregate<E, F = never> = E extends Event<infer A, any> ? A : F
+export type AnyEvent = Event<AnyAggregate, any>
 export type EventHandler<T extends AnyEvent> = (event: T) => void
 export type EventConstructor<T extends AnyEvent> = {
   new (...args: any[]): T,
@@ -62,7 +72,3 @@ export type EventConstructor<T extends AnyEvent> = {
 }
 export type EventType<T extends AnyEvent> = string|EventConstructor<T>
 export type AnyEventType = EventType<AnyEvent>
-
-const typeToString = (type: EventType<AnyEvent>) => (
-  typeof type === 'function' ? type.TYPE : type
-)

@@ -1,4 +1,4 @@
-import Event, { AnyEvent, EventConstructor } from '../Event'
+import type { AnyEvent, EventConstructor } from '../Event'
 
 type AnyEventConstructor = EventConstructor<AnyEvent>
 

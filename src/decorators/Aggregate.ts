@@ -1,6 +1,6 @@
-import { AnyAggregateConstructor } from '../Aggregate'
+import type { AnyAggregateConstructor } from '../Aggregate'
 import { getEventHandler } from './When'
-import { AnyEvent, EventConstructor } from '../Event'
+import type { AnyEvent, EventConstructor } from '../Event'
 
 const aggregates = new Map<string, AnyAggregateConstructor>()
 
@@ -69,10 +69,7 @@ export default function Aggregate(name: string, options: AggregateOptions = {}) 
 
       public recordThat(event: AnyEvent) {
         this.version += 1
-        event.withSubject(
-          this,
-          this.version,
-        )
+        event.withSubject(this)
         this.#applyEvent(event)
         this.#recordedEvents.push(event)
       }
@@ -100,7 +97,7 @@ export default function Aggregate(name: string, options: AggregateOptions = {}) 
       public replay(events: AnyEvent[]): void {
         events.forEach((event) => {
           if (this.version !== event.version - 1) {
-            throw new Error('Events are not replayed in occurance order')
+            throw new Error('Events are not replayed in correct order')
           }
 
           this.version = event.version

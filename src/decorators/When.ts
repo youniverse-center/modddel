@@ -1,4 +1,4 @@
-import { AnyEvent, EventConstructor } from '../Event'
+import type { AnyEvent, EventConstructor } from '../Event'
 
 const eventHandlers = new WeakMap<any, Record<string, string>>()
 

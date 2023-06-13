@@ -1,21 +1,21 @@
 import BaseAggregate, {
   popEvents,
-  AggregateConstructor,
-  AggregateId,
-  AnyAggregate,
-  AnyAggregateConstructor,
+  type AggregateConstructor,
+  type AggregateId,
+  type AnyAggregate,
+  type AnyAggregateConstructor,
 } from './Aggregate'
 import Aggregate, {
   getAggregateClass,
   type AggregateMixin,
 } from './decorators/Aggregate'
 import BaseEvent, {
-  AnyEvent,
-  AnyEventType,
-  EventHandler,
-  EventType,
-  EventPayload,
-}  from './Event'
+  type AnyEvent,
+  type AnyEventType,
+  type EventHandler,
+  type EventType,
+  type EventPayload,
+} from './Event'
 import Event, {
   getEventClass,
 } from './decorators/Event'
