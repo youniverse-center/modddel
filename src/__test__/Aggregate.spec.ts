@@ -1,9 +1,8 @@
-import { EventAggregate } from './../Event'
 import { describe, it, expect } from 'vitest'
-import BaseAggregate, { AnyAggregate, createFromHistory, popEvents } from '../Aggregate'
+import BaseAggregate, { type AnyAggregate, createFromHistory, popEvents } from '../Aggregate'
 import Aggregate, { getAggregateClass } from '../decorators/Aggregate'
 import Event, { getEventClass } from '../decorators/Event'
-import BaseEvent, { AnyEvent } from '../Event'
+import BaseEvent from '../Event'
 import When from '../decorators/When'
 
 @Event('HandledEvent')

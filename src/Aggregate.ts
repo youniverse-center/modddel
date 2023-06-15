@@ -1,6 +1,5 @@
 import { getAggregateClass, type AggregateMixin } from './decorators/Aggregate'
-import type BaseEvent from './Event'
-import type { AnyEvent, EventAggregate } from './Event'
+import BaseEvent, { type AnyEvent, type EventAggregate } from './Event'
 
 export type AggregateId<A> = A extends BaseAggregate<infer I> ? I : never
 export type AnyAggregate = BaseAggregate<any>

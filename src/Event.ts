@@ -5,6 +5,8 @@ const isAggregateConstructor = (possibleConstructor: any): possibleConstructor i
   typeof possibleConstructor === 'function' && Boolean(possibleConstructor.TYPE)
 )
 
+export interface EventMeta {}
+
 export default class Event<A extends AnyAggregate, P> {
   #aggregateType?: string
   #aggregateId?: AggregateId<A>
@@ -12,7 +14,7 @@ export default class Event<A extends AnyAggregate, P> {
 
   public id: string
   public occuredAt: number
-  public meta: any = {}
+  public meta: EventMeta = {}
 
   public static get TYPE() {
     return 'Event'
